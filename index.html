@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U-PROTECT | Redaction Studio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--p:#7c5cff;--p2:#5b3fe0;--soft:#efeaff;--soft2:#f7f4ff;--line:#e3dcfb;--ink:#241b4b;--mut:#7d759b;--bg:#faf8ff;--red:#e5484d}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink);background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.5;z-index:-1;animation:float 14s ease-in-out infinite}
+.b1{width:380px;height:380px;background:#d9ccff;top:-120px;left:-80px}
+.b2{width:320px;height:320px;background:#e9d9ff;bottom:-100px;right:-60px;animation-delay:-6s}
+@keyframes float{50%{transform:translate(40px,30px) scale(1.1)}}
+header{height:66px;flex:none;display:flex;align-items:center;gap:10px;padding:0 20px;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);animation:drop .7s cubic-bezier(.16,1,.3,1)}
+@keyframes drop{from{transform:translateY(-100%);opacity:0}}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin-right:auto}
+.brand .lg{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--p),#a78bff);color:#fff;display:grid;place-items:center;box-shadow:0 6px 16px rgba(124,92,255,.35);animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 6px 26px rgba(124,92,255,.6)}}
+.brand small{color:var(--mut);font-weight:600;font-size:11px;display:block;margin-top:-2px}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);font:600 13px 'Plus Jakarta Sans',sans-serif;padding:9px 14px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+.btn:hover{background:var(--soft);transform:translateY(-1px)}
+.btn.pri{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:0;box-shadow:0 6px 16px rgba(124,92,255,.3)}
+.btn.pri:hover{box-shadow:0 8px 22px rgba(124,92,255,.5);background:linear-gradient(135deg,var(--p),var(--p2))}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.45;pointer-events:none}
+main{flex:1;min-height:0;display:grid;grid-template-columns:330px 1fr}
+aside{overflow:auto;padding:16px;background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:14px;animation:slide .8s .1s cubic-bezier(.16,1,.3,1) both}
+@keyframes slide{from{transform:translateX(-30px);opacity:0}}
+.card{background:var(--soft2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h4{margin:0 0 10px;font-size:13px;font-weight:700}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 4px;font:600 12px 'Plus Jakarta Sans',sans-serif;color:var(--mut);cursor:pointer;transition:.2s}
+.seg button.on{background:var(--p);color:#fff;border-color:var(--p);box-shadow:0 4px 12px rgba(124,92,255,.35)}
+.sw{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sw i{width:26px;height:26px;border-radius:8px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;transition:.2s}
+.sw i:hover{transform:scale(1.12)}
+.sw i.on{box-shadow:0 0 0 2px var(--p)}
+.sw input{width:30px;height:30px;border:0;padding:0;background:none;cursor:pointer}
+.ctl{margin-bottom:12px}
+.ctl:last-child{margin-bottom:0}
+.ctl label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:6px}
+.ctl label b{color:var(--p2);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--p);height:5px;cursor:pointer}
+input[type=text],input[type=date],input[type=number]{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font:500 13px 'Plus Jakarta Sans',sans-serif;color:var(--ink);background:#fff;outline:0}
+input[type=text]:focus,input[type=date]:focus,input[type=number]:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(124,92,255,.15)}
+.row{display:flex;gap:6px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px;text-align:center}
+.stat b{display:block;font-size:24px;font-weight:800;color:var(--p2);line-height:1.1}
+.stat span{font-size:11px;color:var(--mut);font-weight:600}
+.brk{margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11.5px;color:var(--mut)}
+.brk div{display:flex;justify-content:space-between}
+.brk b{color:var(--ink)}
+#viewer{overflow:auto;padding:24px 24px 40px;position:relative;scroll-behavior:smooth}
+.hero{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:rise .9s cubic-bezier(.16,1,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}}
+.hero h1{margin:0;font-size:clamp(34px,5vw,56px);line-height:1.08;font-weight:800;letter-spacing:-1.5px}
+.hero h1 span{background:linear-gradient(90deg,var(--p),#c084fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mut);margin:14px 0 30px;max-width:420px}
+.drop{width:440px;max-width:92%;padding:38px 20px;border:2px dashed #c7b8ff;border-radius:22px;background:#fff;cursor:pointer;transition:.25s;animation:bob 4s ease-in-out infinite}
+.drop:hover,.drop.over{border-color:var(--p);background:var(--soft);transform:translateY(-4px) scale(1.01)}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.drop .ic{font-size:44px;color:var(--p);margin-bottom:12px;stroke-width:1.2}
+.drop b{display:block;font-size:16px}
+.drop span{font-size:13px;color:var(--mut)}
+.stage{position:relative;margin:30px auto;flex:none;transition:width .2s,height .2s}
+.stage .tag{position:absolute;top:-26px;left:0;font-size:11px;font-weight:700;color:var(--p2);background:var(--soft);padding:3px 10px;border-radius:20px}
+.page{position:absolute;left:50%;top:50%;background:#fff;box-shadow:0 14px 40px rgba(91,63,224,.18);transition:transform .2s;will-change:transform;touch-action:none}
+.page canvas{display:block;width:100%;height:100%}
+.layer{position:absolute;inset:0;cursor:crosshair}
+.layer.sel{cursor:default}
+.mask{position:absolute;display:grid;place-items:center;font-weight:800;overflow:hidden;text-align:center;line-height:1;white-space:nowrap;user-select:none}
+.mask.circle{border-radius:50%}
+.mask.selected{outline:3px solid var(--p);outline-offset:2px;cursor:move}
+.modal{position:fixed;inset:0;background:rgba(36,27,75,.35);backdrop-filter:blur(4px);display:none;place-items:center;z-index:50}
+.modal.show{display:grid}
+.box{width:400px;max-width:92vw;background:#fff;border-radius:18px;padding:20px;box-shadow:0 30px 70px rgba(36,27,75,.3);animation:pop .3s cubic-bezier(.16,1,.3,1)}
+@keyframes pop{from{transform:scale(.9);opacity:0}}
+.box h3{margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.box h3 button{border:0;background:var(--soft);width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--p2)}
+.res{margin:12px 0 16px;padding:12px;border-radius:12px;background:var(--soft);font-size:13px;font-weight:600;min-height:44px}
+.res strong{color:var(--p2);font-size:18px}
+.foot{flex:none;text-align:center;font-size:12px;color:var(--mut);padding:7px;background:#fff;border-top:1px solid var(--line)}
+.foot b{color:var(--p2)}
+#toast{position:fixed;bottom:44px;left:50%;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:60;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+header{border-bottom:0;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),#e879f9,var(--p),transparent);background-size:200% 100%;animation:flow 5s linear infinite}
+@keyframes flow{to{background-position:-200% 0}}
+.hero h1 span{background:linear-gradient(90deg,var(--p),#e879f9,#60a5fa,var(--p));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flow 6s linear infinite}
+.hero p small{font-size:12px}
+#viewer{background-image:radial-gradient(#d9d0fb 1px,transparent 1px);background-size:22px 22px}
+.card{background:linear-gradient(180deg,#fff,var(--soft2));box-shadow:0 6px 20px rgba(124,92,255,.07);transition:.25s}
+.card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(124,92,255,.14)}
+.btn.pri{position:relative;overflow:hidden}
+.btn.pri::after{content:"";position:absolute;top:0;left:-70%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);transition:left .6s}
+.btn.pri:hover::after{left:130%}
+.btn.ico{padding:9px 12px}
+.btn:active{transform:scale(.96)}
+.seg button:hover{border-color:var(--p);color:var(--p2)}
+.seg button.on:hover{color:#fff}
+kbd{background:var(--soft);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;font:700 11px 'Plus Jakarta Sans',sans-serif;color:var(--p2)}
+.seg button kbd{margin-left:4px;padding:0 5px;font-size:9px;border-width:1px;opacity:.8}
+.seg button.on kbd{background:rgba(255,255,255,.22);border-color:transparent;color:#fff}
+.mask{animation:mk .25s cubic-bezier(.16,1,.3,1)}
+@keyframes mk{from{opacity:0;transform:scale(.8)}}
+#hud{position:fixed;right:22px;bottom:50px;background:rgba(36,27,75,.88);color:#fff;font-size:12px;font-weight:600;padding:8px 16px;border-radius:30px;display:flex;gap:14px;z-index:20;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(36,27,75,.3);animation:pop .3s}
+#hud.hide{display:none}
+.keys{display:grid;grid-template-columns:1fr auto;gap:9px 18px;font-size:13px;max-height:60vh;overflow:auto}
+.keys span{color:var(--mut);font-weight:600}
+.keys em{color:var(--mut);font-style:normal;font-size:11px;margin:0 3px}
+.keys b{text-align:right;white-space:nowrap}
+/* ---- v4 polish ---- */
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes spinA{to{--a:360deg}}
+@keyframes spin{to{transform:rotate(360deg)}}
+body::before{content:"";position:fixed;inset:-20%;z-index:-2;background:radial-gradient(40% 40% at 20% 20%,rgba(167,139,255,.35),transparent),radial-gradient(35% 35% at 80% 30%,rgba(232,121,249,.25),transparent),radial-gradient(40% 40% at 60% 90%,rgba(96,165,250,.22),transparent);animation:aurora 18s ease-in-out infinite alternate}
+@keyframes aurora{to{transform:translate(4%,3%) rotate(6deg) scale(1.08)}}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cfc3fb;border-radius:10px;border:2px solid transparent;background-clip:content-box}
+aside{background:rgba(255,255,255,.82);backdrop-filter:blur(16px)}
+.brand .lg{position:relative;isolation:isolate}
+.brand .lg::before{content:"";position:absolute;inset:-4px;border-radius:14px;background:conic-gradient(var(--p),#e879f9,#60a5fa,var(--p));z-index:-1;animation:spin 4s linear infinite;filter:blur(6px);opacity:.75}
+.card h4{display:flex;align-items:center;gap:9px;font-size:14px}
+.card h4 i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(135deg,var(--p),#a78bff);color:#fff;font-size:12px;box-shadow:0 4px 10px rgba(124,92,255,.3)}
+.seg button.on{background:linear-gradient(135deg,var(--p),var(--p2))}
+input[type=range]{-webkit-appearance:none;appearance:none;height:8px;border-radius:8px;background:linear-gradient(90deg,var(--p),#c084fc) left center/var(--f,50%) 100% no-repeat,#e6e0fb;outline:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid var(--p);box-shadow:0 3px 10px rgba(124,92,255,.45);transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:4px solid var(--p);box-shadow:0 3px 10px rgba(124,92,255,.45)}
+input[type=range]::-moz-range-track{background:#e6e0fb;height:8px;border-radius:8px}
+input[type=range]::-moz-range-progress{background:var(--p);height:8px;border-radius:8px}
+@supports (-moz-appearance:none){input[type=range]{background:none}}
+.stat{transition:.25s}
+.stat:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(124,92,255,.15)}
+.stat b{background:linear-gradient(135deg,var(--p2),#e879f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.orb{width:96px;height:96px;border-radius:28px;display:grid;place-items:center;font-size:42px;color:#fff;background:linear-gradient(135deg,var(--p),#e879f9);box-shadow:0 18px 40px rgba(124,92,255,.4);margin-bottom:26px;position:relative;animation:bob 4s ease-in-out infinite}
+.orb::before,.orb::after{content:"";position:absolute;inset:-14px;border-radius:40px;border:1.5px solid rgba(124,92,255,.35);animation:ring 3s ease-out infinite}
+.orb::after{animation-delay:1.5s}
+@keyframes ring{from{transform:scale(.85);opacity:1}to{transform:scale(1.4);opacity:0}}
+.drop{position:relative;border:2px solid transparent;background:linear-gradient(#fff,#fff) padding-box,conic-gradient(from var(--a),var(--p),#e879f9,#60a5fa,var(--p)) border-box;animation:bob 4s ease-in-out infinite,spinA 6s linear infinite;box-shadow:0 20px 50px rgba(124,92,255,.15)}
+.drop:hover,.drop.over{background:linear-gradient(var(--soft),var(--soft)) padding-box,conic-gradient(from var(--a),var(--p),#e879f9,#60a5fa,var(--p)) border-box}
+.chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+.chips span{background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:30px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--p2);backdrop-filter:blur(6px);animation:rise .9s both}
+.chips span:nth-child(2){animation-delay:.15s}
+.chips span:nth-child(3){animation-delay:.3s}
+.chips .ic{margin-right:6px}
+.page{box-shadow:0 24px 60px rgba(91,63,224,.22),0 0 0 1px rgba(124,92,255,.08)}
+.stage .tag{background:linear-gradient(90deg,var(--p),#a78bff);color:#fff;box-shadow:0 4px 10px rgba(124,92,255,.3)}
+.mask.selected{animation:mk .25s cubic-bezier(.16,1,.3,1),selp 1.6s ease-in-out infinite}
+@keyframes selp{50%{outline-color:#c084fc;box-shadow:0 0 0 7px rgba(124,92,255,.16)}}
+#toast{background:linear-gradient(135deg,var(--p2),var(--p));box-shadow:0 10px 26px rgba(124,92,255,.4)}
+.box{border-top:4px solid var(--p)}
+.foot{background:rgba(255,255,255,.8);backdrop-filter:blur(10px)}
+.wlist{max-height:38vh;overflow:auto;display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.wrow{display:flex;align-items:center;gap:10px;background:var(--soft2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;animation:rise .4s both}
+.wrow.today{border-color:var(--p);background:var(--soft)}
+.wrow .d{flex:1;font-weight:700}
+.wrow .d small{display:block;color:var(--mut);font-weight:600;font-size:11px;margin-top:2px}
+.wrow button{border:0;background:#fdecec;color:var(--red);width:32px;height:32px;border-radius:9px;cursor:pointer;transition:.2s}
+.wrow button:hover{background:var(--red);color:#fff}
+.empty{text-align:center;color:var(--mut);font-size:13px;padding:22px 8px}
+.mask{overflow:visible}
+.mask .h{position:absolute;right:calc(var(--hs,16px)/-2);bottom:calc(var(--hs,16px)/-2);width:var(--hs,16px);height:var(--hs,16px);border-radius:50%;background:#fff;border:calc(var(--hs,16px)*.22) solid var(--p);cursor:nwse-resize;box-shadow:0 2px 8px rgba(124,92,255,.5);touch-action:none}
+.mask.selected{outline-width:calc(3px/var(--z,1));outline-offset:calc(2px/var(--z,1));cursor:move}
+#tip{position:fixed;left:350px;bottom:50px;max-width:min(560px,calc(100vw - 560px));background:#fff;border:1px solid var(--line);color:var(--ink);font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:30px;z-index:20;box-shadow:0 8px 24px rgba(124,92,255,.18);display:flex;gap:8px;align-items:center;animation:pop .3s}
+#tip .ic{color:var(--p);flex:none}
+#tip.hide{display:none}
+.hero .trust{margin:16px 0 0;font-size:12px;color:var(--mut)}
+@media(max-width:860px){#tip{left:12px;right:12px;max-width:none;bottom:auto;top:74px;border-radius:14px}}
+.box h3 button{display:grid;place-items:center;transition:.2s}
+.box h3 button:hover{background:var(--p);color:#fff;transform:rotate(90deg)}
+.wrow button{width:auto;padding:0 12px;font:700 12px 'Plus Jakarta Sans',sans-serif}
+/* ---- layout + file bar ---- */
+.work{min-height:0;min-width:0;display:flex;flex-direction:column}
+#viewer{flex:1;min-height:0}
+.docs{display:flex;flex-direction:column;align-items:center;width:max-content;min-width:100%;margin:0 auto;padding-bottom:30px}
+.stage{margin:34px 0 22px}
+#fbar{flex:none;display:flex;align-items:center;gap:12px;margin:12px 16px 0;padding:8px 8px 8px 16px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 18px rgba(124,92,255,.1);animation:drop .4s}
+#fbar.hide{display:none}
+#fbar .fi{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
+#fbar .fi .ic{color:var(--p);font-size:18px}
+#fbar .fi b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+#fbar .fi span{font-size:12px;color:var(--mut);font-weight:600;background:var(--soft);padding:3px 10px;border-radius:20px;white-space:nowrap}
+#fbar.done{border-color:#34d399;background:#f0fdf8}
+#fbar.done .fi .ic{color:#10b981}
+#fbar.done .fi span{background:#d1fae5;color:#047857}
+#fbar.done #bNew{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:0;animation:pulse 2s ease-in-out infinite}
+@media(max-width:860px){.work{min-height:60vh}#fbar .btn span{display:inline}}
+.card h4 svg{box-sizing:border-box;width:26px;height:26px;padding:6px;border-radius:8px;background:linear-gradient(135deg,var(--p),#a78bff);color:#fff;box-shadow:0 4px 10px rgba(124,92,255,.3)}
+.stat.big b{font-size:34px}
+.stat.big{padding:14px}
+.btn kbd{margin-left:3px;padding:0 5px;font-size:10px;border-width:1px;opacity:.85}
+.btn.glow{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:0;animation:pulse 2s ease-in-out infinite}
+.btn.glow kbd{background:rgba(255,255,255,.2);border-color:transparent;color:#fff}
+@media(max-width:1100px){.btn kbd{display:none}}
+.page{will-change:auto}
+.page.loading::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(100deg,transparent 30%,rgba(124,92,255,.09) 50%,transparent 70%);background-size:200% 100%;animation:shim 1.3s linear infinite}
+@keyframes shim{to{background-position:-200% 0}}
+.many .stage,.many .page{transition:none}
+#fbar{position:relative;overflow:hidden}
+.pb{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,var(--p),#e879f9);transition:width .2s}
+.ic{width:1em;height:1em;flex:none;vertical-align:-.15em}
+.brand .lg .ic{font-size:19px}
+.orb .ic{stroke-width:1.2}
+.btn .ic{font-size:15px}
+.lq{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;margin-right:6px}
+.lq input{accent-color:var(--p);width:15px;height:15px}
+.lq small{color:var(--mut);font-weight:500}
+body.open::before,body.open .blob,body.open .brand .lg::before,body.open header::after{animation:none}
+body.open aside,body.open header{backdrop-filter:none}
+body.open aside{background:#fff}
+.many .page{box-shadow:0 4px 14px rgba(91,63,224,.18)}
+@media(max-width:860px){body{overflow:auto}main{grid-template-columns:1fr;display:flex;flex-direction:column-reverse}aside{border-right:0;border-top:1px solid var(--line);max-height:46vh}#viewer{min-height:60vh}header{flex-wrap:wrap;height:auto;padding:10px 14px}.btn span{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+
+<header>
+  <div class="brand"><div class="lg"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l5.5 2v4c0 3.2-2.3 5.6-5.5 7-3.2-1.4-5.5-3.8-5.5-7v-4z"/><path d="M8 1.5v13"/></svg></div><div>U-PROTECT<small>Redaction Studio</small></div></div>
+  <button class="btn" id="bNew" onclick="newFile()"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg><span>New file</span><kbd>Alt</kbd><kbd>N</kbd></button>
+  <button class="btn" id="bClose" onclick="closeFile()" disabled><svg width="12" height="12" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg><span>Close file</span><kbd>Alt</kbd><kbd>W</kbd></button>
+  <button class="btn ico" id="bUndo" onclick="undo()" title="Undo (Ctrl+Z)" disabled><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h5a3.5 3.5 0 010 7H6"/><path d="M6.5 3.5L4 6l2.5 2.5"/></svg></button>
+  <button class="btn ico" id="bRedo" onclick="redo()" title="Redo (Ctrl+Y)" disabled><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6H7a3.5 3.5 0 000 7h3"/><path d="M9.5 3.5L12 6 9.5 8.5"/></svg></button>
+  <button class="btn ico" onclick="$('km').classList.add('show')" title="Keyboard shortcuts"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="4" width="13" height="8" rx="1.5"/><path d="M4.5 7h.01M7 7h.01M9.5 7h.01M12 7h.01M5 10h6"/></svg></button>
+  
+  <button class="btn" onclick="openDate()"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg><span>Date calculator</span></button>
+  <button class="btn pri" id="bExp" onclick="exportFile()" disabled title="Export (Ctrl+S)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M2.5 13h11"/></svg><span id="bExpT">Export</span></button>
+</header>
+
+<main>
+<aside>
+  <div class="card">
+    <h4><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5l2.5 2.5L5.5 13 2 14l1-3.5z"/></svg> Tool</h4>
+    <div class="seg" style="margin-bottom:6px">
+      <button id="mDraw" class="on" onclick="setMode('draw')"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5l2.5 2.5L5.5 13 2 14l1-3.5z"/></svg> Draw</button>
+      <button id="mSel" onclick="setMode('select')"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2l9 4.5-3.8 1.2L6.8 12z"/></svg> Select</button>
+    </div>
+    <div class="seg">
+      <button id="sRect" class="on" onclick="setShape('rect')"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/></svg> Rectangle</button>
+      <button id="sCirc" onclick="setShape('circle')"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/></svg> Circle</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12"/><circle cx="5" cy="4" r="1.5" fill="currentColor"/><circle cx="10.5" cy="8" r="1.5" fill="currentColor"/><circle cx="6.5" cy="12" r="1.5" fill="currentColor"/></svg> Editor</h4>
+    <div class="ctl"><label>Color bar</label>
+      <div class="sw" id="sw"></div>
+    </div>
+    <div class="ctl"><label>Rotate page</label><div class="row"><button class="btn" style="flex:1;justify-content:center" onclick="addAngle(-90)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h5a3.5 3.5 0 010 7H6"/><path d="M6.5 3.5L4 6l2.5 2.5"/></svg> 90°</button><button class="btn" style="flex:1;justify-content:center" onclick="addAngle(90)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6H7a3.5 3.5 0 000 7h3"/><path d="M9.5 3.5L12 6 9.5 8.5"/></svg> 90°</button></div></div>
+    <div class="ctl"><label>Zoom bar <b id="zV">100%</b></label>
+      <div class="row" style="align-items:center"><button class="btn" onclick="stepZoom(-10)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10"/></svg></button><input type="range" id="zR" min="10" max="300" value="100"><button class="btn" onclick="stepZoom(10)"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button><button class="btn" onclick="resetView()" title="Fit to screen">Fit</button></div>
+    </div>
+    </div>
+
+  <div class="card">
+    <h4><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13V8M8 13V3M13 13V6"/></svg> Work count</h4>
+    <div class="stat big"><b id="tdN">0</b><span>Files done today</span></div>
+    <button class="btn" style="width:100%;justify-content:center;margin-top:12px" onclick="openWork()"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg> Total work &amp; history</button>
+  </div>
+</aside>
+
+<section class="work">
+<div id="fbar" class="hide">
+  <div class="fi"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5l3.5 3.5v9.5H4z"/><path d="M9 1.5V5h3.5M6 8.5h4M6 11h4"/></svg><b id="fName">Document</b><span id="fMeta">1 page</span></div>
+  <label class="lq" title="PNG for edited pages: pixel-perfect but slower"><input type="checkbox" id="lossless"> Lossless export <small>(slower)</small></label>
+  <div class="pb" id="pb"></div>
+</div>
+<div id="viewer">
+  <div class="hero" id="home">
+    <div class="orb"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5l5.5 2v4c0 3.2-2.3 5.6-5.5 7-3.2-1.4-5.5-3.8-5.5-7v-4z"/><path d="M8 1.5v13"/></svg></div>
+    <h1>Keep your<br><span>documents</span> safe</h1>
+    <p>Open a PDF or image, cover the sensitive parts, and export a flattened redacted copy.<br><small>Tip: <kbd>Ctrl</kbd> + <kbd>Z</kbd> undoes, <kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>V</kbd> copies and pastes a box.</small></p>
+    <div class="drop" id="drop" onclick="fileIn.click()">
+      <svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12a3 3 0 01-.3-6 4 4 0 017.7 1A2.6 2.6 0 0111.5 12z"/><path d="M8 11V7M6 8.5L8 6.5 10 8.5"/></svg>
+      <b>Select a file</b>
+      <span>or drag &amp; drop it here (PDF, JPG, PNG)</span>
+    </div>
+    <div class="chips"><span><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 4a1 1 0 011-1h3.5l1.5 1.5h5.5a1 1 0 011 1V12a1 1 0 01-1 1h-10.5a1 1 0 01-1-1z"/></svg>1. Open a file</span><span><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5l2.5 2.5L5.5 13 2 14l1-3.5z"/></svg>2. Drag over what to hide</span><span><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8M4.5 7L8 10.5 11.5 7M2.5 13h11"/></svg>3. Export</span></div>
+    <p class="trust"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg> Your files never leave your device.</p>
+  </div>
+</div>
+</section>
+</main>
+
+<div class="foot">Developed by <b>UsmanF</b></div>
+<input type="file" id="fileIn" accept="application/pdf,image/*" hidden>
+
+<div class="modal" id="dm" onclick="if(event.target===this)closeDate()">
+  <div class="box">
+    <h3>Date calculator <button onclick="closeDate()"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button></h3>
+    <div id="d1">
+      <div class="ctl"><label>From date</label><input type="date" id="fromD"></div>
+      <div class="ctl"><label>To date</label><input type="date" id="toD"></div>
+    </div>
+    <div class="res" id="dres">Select dates.</div>
+    <button class="btn pri" style="width:100%;justify-content:center" onclick="calcDate()"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="1.5" width="10" height="13" rx="1.5"/><path d="M5.5 4.5h5M5.5 8h.01M8 8h.01M10.5 8h.01M5.5 11h.01M8 11h.01M10.5 11h.01"/></svg> Calculate</button>
+  </div>
+</div>
+<div class="modal" id="wm" onclick="if(event.target===this)closeWork()">
+  <div class="box" style="width:440px">
+    <h3>Total work <button onclick="closeWork()"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button></h3>
+    <div class="stat"><b id="wF">0</b><span>Total files completed</span></div>
+    <div class="wlist" id="wList"></div>
+    <div class="row">
+      <button class="btn danger" style="flex:1;justify-content:center" onclick="delToday()">Delete today's work</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="km" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="box" style="width:460px"><h3>Keyboard shortcuts <button onclick="$('km').classList.remove('show')"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></button></h3><div class="keys" id="keys"></div></div>
+</div>
+<div id="tip" class="hide"></div>
+<div id="hud" class="hide"><span id="hZ">100%</span><span id="hA">0°</span><span id="hM">0 marks</span></div>
+<div class="modal" id="cm"><div class="box" style="width:380px"><h3 id="cmT">Confirm</h3><p id="cmM" style="margin:0 0 16px;font-size:14px;color:var(--mut)"></p>
+  <div class="row"><button class="btn" style="flex:1;justify-content:center" id="cmN">Cancel</button><button class="btn danger" style="flex:1;justify-content:center" id="cmY">OK</button></div></div></div>
+<div id="toast"></div>
+
+<script>
+const WORKER="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc=WORKER;
+async function getDoc(buf){return pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise}
+async function openPdf(buf){if(!window.pdfjsLib)throw new Error('PDF engine failed to load. Check your internet connection.');
+ try{return await getDoc(buf)}catch(e){const t=await (await fetch(WORKER)).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:'text/javascript'}));return await getDoc(buf)}}
+const $=id=>document.getElementById(id);
+document.addEventListener('contextmenu',e=>e.preventDefault());
+const viewer=$('viewer'),fileIn=$('fileIn');
+const HOME=$('home').outerHTML;
+const COLORS=['#000000','#ffffff','#7c5cff','#c084fc','#ec4899','#ef4444','#f59e0b','#10b981','#0ea5e9'];
+let counted=false,mode='draw',shape='rect',color='#000000',zoom=1,angle=0,fit=1,pages=[],shapes=[],sel=null,uid=0,fileName='Document';
+
+/* ---------- toast ---------- */
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ---------- work counter ---------- */
+const KEY='uprotect_work_v2';
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function loadS(){try{return JSON.parse(localStorage.getItem(KEY))||{total:{},days:{}}}catch(e){return{total:{},days:{}}}}
+let S=loadS();
+function saveS(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function openWork(){renderWork();$('wm').classList.add('show')}
+function closeWork(){$('wm').classList.remove('show')}
+function renderWork(){
+ $('wF').textContent=S.total.files||0;
+ const days=Object.keys(S.days).sort().reverse(),t=today();
+ $('wList').innerHTML=days.length?days.map(d=>{const x=S.days[d],n=new Date(d+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  return `<div class="wrow${d===t?' today':''}"><div class="d">${n}${d===t?' (Today)':''}<small>${x.files||0} files completed</small></div><button title="Delete this day" onclick="delDay('${d}')">Delete</button></div>`}).join('')
+  :'<div class="empty">No work recorded yet. Export a file to start counting.</div>';
+}
+function delDay(d){const x=S.days[d];if(!x)return;for(const k in x)S.total[k]=Math.max(0,(S.total[k]||0)-x[k]);delete S.days[d];saveS();renderS();renderWork();toast('Work deleted')}
+function ask(title,msg,yes){return new Promise(res=>{$('cmT').textContent=title;$('cmM').textContent=msg;$('cmY').textContent=yes;const m=$('cm');m.classList.add('show');
+ const end=v=>{m.classList.remove('show');$('cmY').onclick=$('cmN').onclick=null;res(v)};$('cmY').onclick=()=>end(true);$('cmN').onclick=()=>end(false)})}
+async function delToday(){if(!S.days[today()])return toast('No work recorded today');if(await ask("Delete today's work?","Today's file count will be removed from your history.",'Delete'))delDay(today())}
+function done(){if(!counted){counted=true;bump('files')}$('fbar').classList.add('done');$('bNew').classList.add('glow');$('fMeta').textContent='Done - exported'}
+function bump(k,n=1){S.total[k]=(S.total[k]||0)+n;const d=today();S.days[d]=S.days[d]||{};S.days[d][k]=(S.days[d][k]||0)+n;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderS()}
+const sum=o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
+function tween(el,to){const from=+el.textContent||0;if(from===to)return;const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/500);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f)})(t0)}
+function renderS(){const d=S.days[today()]||{};tween($('tdN'),d.files||0)}
+renderS();
+
+/* ---------- UI setup ---------- */
+$('sw').innerHTML=COLORS.map((c,i)=>`<i data-c="${c}" style="background:${c}" class="${i?'':'on'}"></i>`).join('')+'<input type="color" id="cc" value="#000000" title="Custom color">';
+$('sw').onclick=e=>{if(e.target.dataset.c)setColor(e.target.dataset.c)};
+$('cc').oninput=e=>setColor(e.target.value,true);
+function setColor(c,custom){color=c;document.querySelectorAll('#sw i').forEach(i=>i.classList.toggle('on',!custom&&i.dataset.c===c));if(sel){sel.color=c;sync(sel);commitSoon()}}
+function setMode(m){mode=m;$('mDraw').classList.toggle('on',m==='draw');$('mSel').classList.toggle('on',m==='select');document.querySelectorAll('.layer').forEach(l=>l.classList.toggle('sel',m==='select'));if(m==='draw')select(null);updTip()}
+function setShape(s){shape=s;$('sRect').classList.toggle('on',s==='rect');$('sCirc').classList.toggle('on',s==='circle')}
+$('zR').oninput=e=>{userZoomed=true;setZoom(+e.target.value/100)};
+function addAngle(d){setAngle((angle+d+360)%360)}
+function stepZoom(d){userZoomed=true;setZoom(Math.round(zoom*100+d)/100)}
+function setAngle(a){angle=((a%360)+360)%360;if(pages.length&&!userZoomed){fit=computeFit();setZoom(fit)}else{layoutAll();updHud()}}
+function setZoom(z){zoom=Math.min(3,Math.max(.1,z));$('zR').value=Math.round(zoom*100);$('zV').textContent=Math.round(zoom*100)+'%';layoutAll();updHud();scheduleRerender()}
+
+/* ---------- layout: zoom + any-angle rotation without breaking layout ---------- */
+function bbox(w,h){const r=angle*Math.PI/180,c=+Math.abs(Math.cos(r)).toFixed(9),s=+Math.abs(Math.sin(r)).toFixed(9);return{W:w*c+h*s,H:w*s+h*c}}
+function computeFit(){if(!pages.length)return 1;const mw=Math.max(...pages.map(p=>bbox(p.w,p.h).W));return Math.min(1.5,Math.max(.1,(viewer.clientWidth-70)/mw))}
+function layout(pg){const b=bbox(pg.w,pg.h);pg.stage.style.width=b.W*zoom+'px';pg.stage.style.height=b.H*zoom+'px';
+ pg.page.style.transform=`translate(-50%,-50%) scale(${zoom}) rotate(${angle}deg)`}
+function layoutAll(){pages.forEach(layout);const r=document.documentElement.style;r.setProperty('--hs',Math.min(80,18/zoom)+'px');r.setProperty('--z',zoom)}
+
+/* ---------- file loading ---------- */
+fileIn.onchange=e=>{if(e.target.files[0])load(e.target.files[0]);fileIn.value=''};
+['dragover','dragenter'].forEach(ev=>viewer.addEventListener(ev,e=>{e.preventDefault();const d=viewer.querySelector('.drop');if(d)d.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>viewer.addEventListener(ev,e=>{e.preventDefault();const d=viewer.querySelector('.drop');if(d)d.classList.remove('over')}));
+viewer.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)load(f)});
+function showHome(){viewer.innerHTML=HOME;viewer.scrollTop=0;$('fbar').classList.add('hide')}
+async function newFile(){if(shapes.length&&!counted&&!(await ask('Open a new file?','Marks on this file are not exported yet.','Continue')))return;fileIn.click()}
+async function closeFile(){if(!pages.length)return;if(busyExp)return toast('Please wait, export is running');if(shapes.length&&!counted&&!(await ask('Close this file?','Marks on it are not exported yet.','Close file')))return;
+ sess++;if(io)io.disconnect();if(pdfDoc){try{pdfDoc.destroy()}catch(e){}pdfDoc=null}pdfBytes=null;setProg(0);
+ pages=[];shapes=[];sel=null;hist=['[]'];hi=0;counted=false;angle=0;userZoomed=false;
+ document.body.classList.remove('open');showHome();$('bExp').disabled=$('bClose').disabled=true;$('bNew').classList.remove('glow');$('bExpT').textContent='Export';setZoom(1);updUR();toast('File closed')}
+
+const LOGICAL=2;                     /* logical units per PDF point (page ~1190 x 1684 for A4) */
+let pdfDoc=null,pdfBytes=null,sess=0,userZoomed=false,io=null,active=0,waiting=[],rrT,busyExp=false;
+const dpr=()=>Math.min(2,window.devicePixelRatio||1);
+const needScale=()=>Math.min(4,Math.max(2,LOGICAL*zoom*dpr()));
+function setProg(f){$('pb').style.width=(f*100)+'%'}
+const tick=()=>new Promise(r=>setTimeout(r));
+
+async function load(file){
+ const my=++sess;
+ try{
+  fileName=file.name.replace(/\.[^.]+$/,'');
+  if(io)io.disconnect();
+  if(pdfDoc){try{pdfDoc.destroy()}catch(e){}pdfDoc=null}pdfBytes=null;
+  viewer.innerHTML='<div class="docs" id="docs"></div>';pages=[];shapes=[];sel=null;hist=['[]'];hi=0;counted=false;userZoomed=false;angle=0;
+  $('bExp').disabled=true;$('bClose').disabled=false;$('bNew').classList.remove('glow');
+  document.body.classList.add('open');$('fName').textContent=file.name;$('fMeta').textContent='Opening...';$('fbar').classList.remove('hide','done');setProg(0);
+  io=new IntersectionObserver(onVis,{root:viewer,rootMargin:'900px 0px'});
+  const first=()=>{fit=computeFit();setZoom(fit);setMode('draw');updUR();viewer.scrollTop=0;viewer.scrollLeft=0;const pdfIn=pages[0].kind==='pdf';$('bExpT').textContent=pdfIn?'Export PDF':'Export JPG';document.querySelector('.lq').style.display=pdfIn?'':'none'};
+  let n=1;
+  if(file.type.includes('pdf')||/\.pdf$/i.test(file.name)){
+   const buf=await file.arrayBuffer();pdfBytes=buf;pdfDoc=await openPdf(buf);if(my!==sess)return;
+   n=pdfDoc.numPages;$('docs').classList.toggle('many',n>8);
+   for(let i=1;i<=n;){
+    const c=i===1?1:Math.min(12,n-i+1);
+    const ps=await Promise.all(Array.from({length:c},(_,k)=>pdfDoc.getPage(i+k)));if(my!==sess)return;
+    ps.forEach((p,k)=>{const v=p.getViewport({scale:1});p.cleanup();
+     addPage({kind:'pdf',pw:v.width,ph:v.height,w:Math.round(v.width*LOGICAL),h:Math.round(v.height*LOGICAL)},i+k,n);if(i+k===1)first()});
+    i+=c;$('fMeta').textContent=`Loading ${i-1} / ${n}`;setProg((i-1)/n);await tick();
+   }
+  }else{
+   const url=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('Could not read the file.'));r.readAsDataURL(file)});
+   const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('This image format is not supported.'));im.src=url});
+   const k=Math.min(1,3200/Math.max(img.width,img.height)),c=document.createElement('canvas');
+   c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+   const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(img,0,0,c.width,c.height);
+   addPage({kind:'img',base:c,pw:c.width*.75,ph:c.height*.75,w:c.width,h:c.height},1,1);first();
+  }
+  if(my!==sess)return;
+  if(!userZoomed){fit=computeFit();setZoom(fit)}
+  $('bExp').disabled=false;setProg(0);
+  $('fMeta').textContent=n+(n>1?' pages':' page');toast('File loaded');
+ }catch(err){if(my!==sess)return;const m=(err&&err.message)||'Could not open this file. Please try again.';console.error('Load error: '+m);if(!pages.length)showHome();setProg(0);toast(m)}
+}
+
+function addPage(o,i,n){
+ const stage=document.createElement('div');stage.className='stage';
+ stage.innerHTML=`<div class="tag">Page ${i} / ${n}</div><div class="page loading"><div class="layer"></div></div>`;
+ const page=stage.querySelector('.page'),layer=stage.querySelector('.layer');
+ page.style.width=o.w+'px';page.style.height=o.h+'px';
+ const canvas=o.base||document.createElement('canvas');
+ if(o.base)page.classList.remove('loading');else canvas.width=canvas.height=1;
+ page.insertBefore(canvas,layer);
+ $('docs').appendChild(stage);
+ const pg={stage,page,layer,canvas,kind:o.kind,base:o.base,w:o.w,h:o.h,pw:o.pw,ph:o.ph,idx:i-1,vis:false,rs:0,busy:false};
+ stage._pg=pg;pages.push(pg);bindLayer(pg);layout(pg);io.observe(stage);return pg;
+}
+
+/* ---------- lazy page rendering: only pages near the screen are drawn ---------- */
+function onVis(es){es.forEach(en=>{const pg=en.target._pg;if(!pg)return;pg.vis=en.isIntersecting;if(pg.vis)ensure(pg);else release(pg)})}
+function runQ(fn){return new Promise(res=>{const go=async()=>{active++;try{await fn()}finally{active--;res();const nx=waiting.shift();if(nx)nx()}};active<2?go():waiting.push(go)})}
+function ensure(pg){
+ if(pg.kind!=='pdf'||!pg.vis||pg.busy)return;
+ const R=needScale();if(pg.rs&&pg.rs>=R*.85&&pg.rs<=R*2.2)return;
+ pg.busy=true;const my=sess;
+ runQ(async()=>{
+  try{
+   if(my!==sess||!pg.vis||!pdfDoc)return;
+   const page=await pdfDoc.getPage(pg.idx+1),vp=page.getViewport({scale:R});
+   const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+   const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+   await page.render({canvasContext:x,viewport:vp}).promise;page.cleanup();
+   if(my!==sess||!pg.vis)return;
+   pg.canvas.replaceWith(c);pg.canvas=c;pg.rs=R;pg.page.classList.remove('loading');
+  }catch(e){}finally{pg.busy=false}
+ });
+}
+function release(pg){if(pg.kind!=='pdf'||!pg.rs)return;pg.canvas.width=pg.canvas.height=1;pg.rs=0;pg.page.classList.add('loading')}
+function scheduleRerender(){clearTimeout(rrT);rrT=setTimeout(()=>pages.forEach(ensure),350)}
+
+/* ---------- pointer -> page coordinates (works at every zoom/angle) ---------- */
+function toBase(pg,e){
+ const r=pg.stage.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ const dx=e.clientX-cx,dy=e.clientY-cy,a=-angle*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
+ return{x:(dx*c-dy*s)/zoom+pg.w/2,y:(dx*s+dy*c)/zoom+pg.h/2};
+}
+
+/* ---------- shapes ---------- */
+const fs=s=>Math.max(8,Math.min(s.h*.55,s.w*1.7/Math.max(1,(s.text||'').length)));
+const textCol=c=>{const n=parseInt(c.slice(1),16),l=.299*(n>>16)+.587*((n>>8)&255)+.114*(n&255);return l>150?'#111':'#fff'};
+function sync(s){const e=s.el;e.style.cssText=`left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px;background:${s.color}`;
+ e.className='mask '+s.type+(s===sel?' selected':'');
+ const h=e.querySelector('.h');if(s===sel&&!h){const n=document.createElement('i');n.className='h';e.appendChild(n)}else if(s!==sel&&h)h.remove()}
+function select(s){setTimeout(()=>{refreshRanges();updTip()},0);const prev=sel;sel=s;if(prev)sync(prev);if(s)sync(s)}
+function delSel(){if(!sel)return toast('Select a box first');sel.el.remove();shapes=shapes.filter(x=>x!==sel);sel=null;commit()}
+/* ---------- undo / redo ---------- */
+let hist=['[]'],hi=0,ct;
+const snap=()=>JSON.stringify(shapes.map(({el,...r})=>r));
+function commit(){const j=snap();if(hist[hi]===j){updUR();return}hist=hist.slice(0,hi+1);hist.push(j);if(hist.length>100)hist.shift();hi=hist.length-1;updUR()}
+function commitSoon(){clearTimeout(ct);ct=setTimeout(commit,400)}
+function restore(j){shapes.forEach(s=>s.el.remove());sel=null;
+ shapes=JSON.parse(j).filter(r=>pages[r.p]).map(r=>{r.el=document.createElement('div');pages[r.p].layer.appendChild(r.el);sync(r);return r});updUR()}
+function undo(){clearTimeout(ct);commit();if(hi<=0)return toast('Nothing to undo');restore(hist[--hi]);toast('Undo')}
+function redo(){if(hi>=hist.length-1)return toast('Nothing to redo');restore(hist[++hi]);toast('Redo')}
+function updUR(){$('bUndo').disabled=hi<=0;$('bRedo').disabled=hi>=hist.length-1;updHud()}
+function refreshRanges(){document.querySelectorAll('input[type=range]').forEach(r=>r.style.setProperty('--f',((r.value-r.min)/(r.max-r.min)*100)+'%'))}
+document.addEventListener('input',e=>{if(e.target.type==='range')refreshRanges()});
+function updTip(){const t=$('tip');t.classList.toggle('hide',!pages.length);
+ t.innerHTML=sel?'<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2l9 4.5-3.8 1.2L6.8 12z"/></svg> Drag the box to move it, drag the round handle to resize, press Delete to remove.':mode==='draw'?'<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5l2.5 2.5L5.5 13 2 14l1-3.5z"/></svg> Drag over anything you want to hide. Click a box to move or resize it.':'<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2l9 4.5-3.8 1.2L6.8 12z"/></svg> Click a box to move or resize it.'}
+function updHud(){updTip();refreshRanges();$('hud').classList.toggle('hide',!pages.length);$('hZ').textContent=Math.round(zoom*100)+'%';$('hA').textContent=Math.round(angle)+'°';$('hM').textContent=shapes.length+(shapes.length===1?' mark':' marks')}
+function resetView(){userZoomed=false;fit=computeFit();setZoom(fit)}
+document.addEventListener('change',e=>{if(e.target.type==='range')e.target.blur()});
+viewer.addEventListener('wheel',e=>{if(e.ctrlKey&&pages.length){e.preventDefault();stepZoom(e.deltaY<0?10:-10)}},{passive:false});
+
+/* ---------- keyboard shortcuts (kept short and useful) ---------- */
+let clip=null,pasteN=0;
+function copySel(){const{el,...r}=sel;clip=r;pasteN=0;toast('Copied')}
+function pasteSel(){const pg=pages[sel?sel.p:clip.p]||pages[0];if(!pg)return;pasteN++;
+ const w=Math.min(clip.w,pg.w),h=Math.min(clip.h,pg.h),o=20*pasteN;
+ const n={...clip,id:++uid,p:pg.idx,w,h,x:Math.max(0,Math.min(pg.w-w,clip.x+o)),y:Math.max(0,Math.min(pg.h-h,clip.y+o)),el:document.createElement('div')};
+ pg.layer.appendChild(n.el);shapes.push(n);select(n);commit();toast('Pasted')}
+const KEYS=[['New file',['Alt N']],['Close file',['Alt W']],['Undo',['Ctrl Z']],['Redo',['Ctrl Y']],['Copy box',['Ctrl C']],['Paste box',['Ctrl V']],['Cut box',['Ctrl X']],
+ ['Delete box',['Del']],['Move box (Shift = 10 px)',['Arrow keys']],['Export file',['Ctrl S']],['Deselect / close',['Esc']],['Zoom with mouse',['Ctrl Scroll']]];
+$('keys').innerHTML=KEYS.map(([a,k])=>`<div style="display:contents"><span>${a}</span><b>${k.map(c=>c.split(' ').map(x=>`<kbd>${x}</kbd>`).join(' + ')).join(' <em>or</em> ')}</b></div>`).join('');
+document.addEventListener('keydown',e=>{
+ const t=e.target,typing=t.tagName==='TEXTAREA'||(t.tagName==='INPUT'&&['text','number','date'].includes(t.type));
+ const k=e.key.toLowerCase(),mod=e.ctrlKey||e.metaKey;
+ if(k==='escape'){if($('cm').classList.contains('show')){$('cmN').click();return}closeDate();closeWork();$('km').classList.remove('show');if(!typing)select(null);return}
+ if(e.altKey&&!mod&&(e.code==='KeyN'||e.code==='KeyW')){e.preventDefault();e.code==='KeyN'?newFile():closeFile();return}
+ if(typing)return;
+ if(mod){
+  if(k==='z'){e.preventDefault();e.shiftKey?redo():undo()}
+  else if(k==='y'){e.preventDefault();redo()}
+  else if(k==='c'){if(sel){e.preventDefault();copySel()}}
+  else if(k==='x'){if(sel){e.preventDefault();copySel();pasteN=-1;delSel()}}
+  else if(k==='v'){if(clip){e.preventDefault();pasteSel()}}
+  else if(k==='s'){e.preventDefault();exportFile()}
+  return}
+ if(e.altKey)return;
+ if(k==='delete'||k==='backspace'){if(sel){e.preventDefault();delSel()}}
+ else if(k.startsWith('arrow')&&sel){e.preventDefault();const n=e.shiftKey?10:1,pg=pages[sel.p];
+  if(k==='arrowleft')sel.x-=n;if(k==='arrowright')sel.x+=n;if(k==='arrowup')sel.y-=n;if(k==='arrowdown')sel.y+=n;
+  sel.x=Math.max(0,Math.min(pg.w-sel.w,sel.x));sel.y=Math.max(0,Math.min(pg.h-sel.h,sel.y));sync(sel);commitSoon()}
+});
+
+function bindLayer(pg){
+ const L=pg.layer;
+ L.onpointerdown=e=>{
+  if(e.button!==0)return;
+  const p=toBase(pg,e),mEl=e.target.closest('.mask'),hit=mEl&&shapes.find(s=>s.el===mEl);
+  L.setPointerCapture(e.pointerId);
+  if(hit&&e.target.classList.contains('h')){
+   select(hit);
+   L.onpointermove=ev=>{const q=toBase(pg,ev);hit.w=Math.max(10,Math.min(pg.w-hit.x,q.x-hit.x));hit.h=Math.max(10,Math.min(pg.h-hit.y,q.y-hit.y));sync(hit)};
+   L.onpointerup=()=>{L.onpointermove=L.onpointerup=null;commit()};return;
+  }
+  if(hit||mode==='select'){
+   if(!hit){select(null);return}
+   select(hit);const ox=p.x-hit.x,oy=p.y-hit.y;
+   L.onpointermove=ev=>{const q=toBase(pg,ev);hit.x=Math.max(0,Math.min(pg.w-hit.w,q.x-ox));hit.y=Math.max(0,Math.min(pg.h-hit.h,q.y-oy));sync(hit)};
+   L.onpointerup=()=>{L.onpointermove=L.onpointerup=null;commit()};return;
+  }
+  const s={id:++uid,p:pg.idx,type:shape,x:p.x,y:p.y,w:1,h:1,color,text:'',el:document.createElement('div')};
+  L.appendChild(s.el);shapes.push(s);sync(s);
+  L.onpointermove=ev=>{const q=toBase(pg,ev);s.x=Math.max(0,Math.min(p.x,q.x));s.y=Math.max(0,Math.min(p.y,q.y));
+   s.w=Math.min(Math.abs(q.x-p.x),pg.w-s.x);s.h=Math.min(Math.abs(q.y-p.y),pg.h-s.y);sync(s)};
+  L.onpointerup=()=>{L.onpointermove=L.onpointerup=null;
+   if(s.w<8||s.h<8){s.el.remove();shapes=shapes.filter(x=>x!==s);select(null);return}
+   select(s);commit()};
+ };
+}
+
+/* ---------- reset ---------- */
+
+/* ---------- export (flattened, true redaction) ---------- */
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),8000)}
+function drawMarks(x,pg,f){x.save();x.scale(f,f);shapes.filter(s=>s.p===pg.idx).forEach(s=>{x.fillStyle=s.color;
+ if(s.type==='circle'){x.beginPath();x.ellipse(s.x+s.w/2,s.y+s.h/2,s.w/2,s.h/2,0,0,Math.PI*2);x.fill()}else x.fillRect(s.x,s.y,s.w,s.h)});x.restore()}
+async function outCanvas(pg,E,rot=true){
+ let t,f;
+ if(pg.kind==='img'){t=document.createElement('canvas');t.width=pg.base.width;t.height=pg.base.height;t.getContext('2d').drawImage(pg.base,0,0);f=1}
+ else{const page=await pdfDoc.getPage(pg.idx+1),vp=page.getViewport({scale:E});
+  t=document.createElement('canvas');t.width=Math.round(vp.width);t.height=Math.round(vp.height);
+  const x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,t.width,t.height);
+  await page.render({canvasContext:x,viewport:vp}).promise;page.cleanup();f=t.width/pg.w}
+ drawMarks(t.getContext('2d'),pg,f);
+ if(!rot)return t;
+ const b=bbox(t.width,t.height),o=document.createElement('canvas');o.width=Math.round(b.W);o.height=Math.round(b.H);
+ const c=o.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,o.width,o.height);c.imageSmoothingQuality='high';
+ c.translate(o.width/2,o.height/2);c.rotate(angle*Math.PI/180);c.drawImage(t,-t.width/2,-t.height/2);
+ t.width=t.height=0;return o;
+}
+/* Best quality: keep the original PDF; only pages that have marks are re-drawn (flattened). */
+async function exportHybrid(my,n){
+ const {PDFDocument,degrees}=PDFLib;
+ const src=await PDFDocument.load(pdfBytes.slice(0),{ignoreEncryption:true});
+ const out=await PDFDocument.create();
+ const edited=new Set(shapes.map(s=>s.p)),keep=[];
+ for(let i=0;i<n;i++)if(!edited.has(i))keep.push(i);
+ const copied=keep.length?await out.copyPages(src,keep):[];
+ const png=$('lossless').checked&&edited.size<=30,E=edited.size>30?3:edited.size>10?3.5:4;   /* fast: JPEG 98% | lossless: PNG */
+ let ci=0;
+ for(let i=0;i<n;i++){
+  if(my!==sess)return null;
+  let page;
+  if(edited.has(i)){
+   const pg=pages[i],o=await outCanvas(pg,E,false);
+   const bytes=await new Promise(r=>o.toBlob(b=>b.arrayBuffer().then(r),png?'image/png':'image/jpeg',.98));
+   const img=png?await out.embedPng(bytes):await out.embedJpg(bytes);
+   page=out.addPage([pg.pw,pg.ph]);page.drawImage(img,{x:0,y:0,width:pg.pw,height:pg.ph});   /* original page size */
+   o.width=o.height=0;
+  }else page=out.addPage(copied[ci++]);
+  if(angle)page.setRotation(degrees((page.getRotation().angle+angle)%360));
+  $('fMeta').textContent=`Exporting ${i+1} / ${n}`;setProg((i+1)/n);await tick();
+ }
+ out.setTitle(fileName+' (redacted)');out.setAuthor('');out.setSubject('');out.setKeywords([]);out.setCreator('U-PROTECT');out.setProducer('U-PROTECT');   /* no leftover metadata */
+ $('fMeta').textContent='Saving...';
+ return out.save();
+}
+async function exportAll(kind){
+ if(!pages.length||busyExp)return;
+ const n=pages.length,my=sess,E=n>60?2:n>20?2.5:3;   /* pixels per PDF point: sharp but light for big files */
+ const {jsPDF}=window.jspdf;let ok=false;
+ busyExp=true;$('bExp').disabled=true;$('fMeta').textContent='Exporting 0 / '+n;
+ try{
+  if(kind==='pdf'&&pdfDoc&&pdfBytes&&window.PDFLib&&angle%90===0){
+   try{const bytes=await exportHybrid(my,n);if(!bytes)return;download(new Blob([bytes],{type:'application/pdf'}),`${fileName}_REDACTED.pdf`);ok=true}
+   catch(e){console.warn('Original-PDF export failed, using image export',e)}
+  }
+  if(!ok){let pdf=null;const zip=(kind==='jpg'&&n>1&&window.JSZip)?new JSZip():null;
+  for(let i=0;i<n;i++){
+   if(my!==sess)return;
+   const pg=pages[i],o=await outCanvas(pg,E);
+   if(kind==='pdf'){
+    const b=bbox(pg.pw,pg.ph),w=b.W,h=b.H,ori=w>h?'l':'p';   /* same page size as the original */
+    if(!pdf)pdf=new jsPDF({orientation:ori,unit:'pt',format:[w,h],compress:true});else pdf.addPage([w,h],ori);
+    pdf.addImage(o.toDataURL('image/jpeg',.95),'JPEG',0,0,w,h,undefined,'FAST');
+   }else{
+    const blob=await new Promise(r=>o.toBlob(r,'image/jpeg',.95));
+    const name=`${fileName}_REDACTED${n>1?'_p'+String(i+1).padStart(String(n).length,'0'):''}.jpg`;
+    if(zip)zip.file(name,blob);else{download(blob,name);await new Promise(r=>setTimeout(r,300))}
+   }
+   o.width=o.height=0;$('fMeta').textContent=`Exporting ${i+1} / ${n}`;setProg((i+1)/n);await tick();
+  }
+  if(kind==='pdf')pdf.save(`${fileName}_REDACTED.pdf`);
+  else if(zip)download(await zip.generateAsync({type:'blob',compression:'STORE'}),`${fileName}_REDACTED_JPG.zip`);
+  ok=true;}
+ }catch(e){console.error(e);toast('Export failed. Please try again.')}
+ finally{busyExp=false;if(my===sess){$('bExp').disabled=false;$('fMeta').textContent=n+(n>1?' pages':' page');setProg(0)}}
+ if(ok){done();toast(kind==='pdf'?'PDF exported':'JPG exported')}
+}
+/* the app judges the file type: PDF in -> PDF out, image in -> JPG out */
+function exportFile(){if(pages.length)return exportAll(pages[0].kind==='pdf'?'pdf':'jpg')}
+
+/* ---------- date calculator ---------- */
+function openDate(){$('dm').classList.add('show')}
+function closeDate(){$('dm').classList.remove('show')}
+
+const fmt=d=>d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+function calcDate(){
+ const R=$('dres');
+ if(!$('fromD').value||!$('toD').value)return R.textContent='Select both dates.';
+ let a=new Date($('fromD').value),b=new Date($('toD').value);
+ const days=Math.round((b-a)/864e5);if(a>b)[a,b]=[b,a];
+ let y=b.getFullYear()-a.getFullYear(),m=b.getMonth()-a.getMonth(),d=b.getDate()-a.getDate();
+ if(d<0){m--;d+=new Date(b.getFullYear(),b.getMonth(),0).getDate()}if(m<0){y--;m+=12}
+ R.innerHTML=`<strong>${Math.abs(days)} days</strong><br>Difference: ${y} years, ${m} months, ${d} days (${(Math.abs(days)/7).toFixed(1)} weeks)`;
+}
+const t0=new Date().toISOString().slice(0,10);$('fromD').value=$('toD').value=t0;
+window.addEventListener('resize',()=>{if(pages.length&&!userZoomed){fit=computeFit();setZoom(fit)}});
+refreshRanges();
+</script>
+</body>
+</html>
